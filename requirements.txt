@@ -1,3 +1,6 @@
 streamlit
-langchain==0.0.306
+langchain==0.3.26
 openai==0.28.1
+
+urllib3==2.7.0
+gitpython==3.1.50
