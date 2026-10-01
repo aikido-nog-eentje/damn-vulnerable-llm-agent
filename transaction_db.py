@@ -1,6 +1,7 @@
 import sqlite3
 import time
-import json 
+import json
+import hashlib 
 
 class TransactionDb:
     def __init__(self, db_name="transactions.db"):
@@ -8,6 +9,13 @@ class TransactionDb:
         self.conn = sqlite3.connect(db_name)
         self.create_tables()
         self.seed_data()
+
+    def _hash_password(self, password):
+        """Hash a password using PBKDF2-HMAC-SHA256 with a fixed salt for seed data."""
+        # Using a fixed salt for seed data to ensure consistent hashing across database recreations
+        # In production, each password should use a unique random salt stored alongside the hash
+        salt = b'transaction_db_seed_salt_v1'
+        return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000).hex()
 
     def create_tables(self):
         # Create database tables if they don't exist
@@ -37,12 +45,12 @@ class TransactionDb:
         # Populate database with sample data
         cursor = self.conn.cursor()
 
-        # Sample users
+        # Sample users - passwords are hashed before storage
         users = [
-            (1,"MartyMcFly", "Password1"),
-            (2,"DocBrown", "flux-capacitor-123"),
-            (3,"BiffTannen", "Password3"),
-            (4,"GeorgeMcFly", "Password4")
+            (1,"MartyMcFly", self._hash_password("Password1")),
+            (2,"DocBrown", self._hash_password("flux-capacitor-123")),
+            (3,"BiffTannen", self._hash_password("Password3")),
+            (4,"GeorgeMcFly", self._hash_password("Password4"))
         ]
         cursor.executemany("INSERT OR IGNORE INTO Users (userId, username, password) VALUES (?, ?, ?)", users)
 
